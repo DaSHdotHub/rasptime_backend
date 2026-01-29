@@ -7,7 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class RasptimeBackendApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(RasptimeBackendApplication.class, args);
+
+        SpringApplication.run(RasptimeBackendApplication.class, args);
 	}
 
 }
