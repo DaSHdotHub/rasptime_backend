@@ -49,7 +49,7 @@ After=network.target docker.service
 [Service]
 User=admshaulov
 WorkingDirectory=/home/admshaulov/projects/rasptime_backend
-ExecStart=/usr/bin/java -jar /home/admshaulov/projects/rasptime_backend/target/rasptime_nackend-0.0.1-SNAPSHOT.jar --server.port=8081
+ExecStart=/usr/bin/java -jar /home/admshaulov/projects/rasptime_backend/target/rasptime_backend-0.0.1-SNAPSHOT.jar --server.port=8081
 SuccessExitStatus=143
 Restart=on-failure
 RestartSec=10
