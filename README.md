@@ -33,6 +33,31 @@ Access H2 Console at: http://localhost:8080/h2-console
 - Username: `sa`
 - Password: (empty)
 
+## Install postgresql
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+
+# Start the service
+sudo service postgresql start
+
+# Create database and user
+sudo -u postgres psql
+```
+```bash
+# SQL commands for the PostgreSQL shell:
+CREATE DATABASE rasptime;
+CREATE USER rasptime WITH ENCRYPTED PASSWORD 'rasptime';
+GRANT ALL PRIVILEGES ON DATABASE rasptime TO rasptime;
+
+-- Required for PostgreSQL 15+
+\c rasptime
+GRANT ALL ON SCHEMA public TO rasptime;
+
+\q
+```
+
+
 ## Production build
 
 ### Create systemd-Service (Linux/Ubuntu)
