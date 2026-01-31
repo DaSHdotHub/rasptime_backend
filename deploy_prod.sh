@@ -26,7 +26,7 @@ sudo systemctl restart ${SERVICE_NAME}
 
 echo ""
 echo "[4/5] Waiting for startup..."
-sleep 30
+sleep 15
 
 echo ""
 echo "[5/5] Health check..."
