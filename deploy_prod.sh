@@ -4,6 +4,7 @@ set -e  # Exit on any error
 APP_DIR=~/projects/rasptime_backend
 SERVICE_NAME=rasptime
 PROFILE=prod
+PORT=8081
 
 cd "$APP_DIR"
 
@@ -25,13 +26,13 @@ sudo systemctl restart ${SERVICE_NAME}
 
 echo ""
 echo "[4/5] Waiting for startup..."
-sleep 5
+sleep 30
 
 echo ""
 echo "[5/5] Health check..."
-if curl -sf http://localhost:8081/api/health > /dev/null; then
+if curl -sf http://localhost:${PORT}/api/health > /dev/null; then
     echo "✓ Application is healthy"
-    curl -s http://localhost:8081/api/health | jq . 2>/dev/null || curl -s http://localhost:8080/api/health
+    curl -s http://localhost:${PORT}/api/health | jq . 2>/dev/null || curl -s http://localhost:8080/api/health
 else
     echo "✗ Health check failed!"
     echo ""
@@ -44,3 +45,4 @@ echo ""
 echo "=========================================="
 echo "Deployment complete"
 echo "=========================================="
+
