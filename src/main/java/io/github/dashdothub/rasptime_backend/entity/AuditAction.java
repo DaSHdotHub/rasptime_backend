@@ -5,5 +5,6 @@ public enum AuditAction {
     CLOCK_OUT,
     USER_CREATED,
     USER_DELETED,
-    LOGIN_FAILED
+    LOGIN_FAILED,
+    UNKNOWN_RFID
 }
