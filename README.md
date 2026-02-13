@@ -26,6 +26,168 @@ java -jar target/timeclock-backend-0.0.1-SNAPSHOT.jar
 |--------|---------------|--------------------|
 | GET    | /api/health   | Health check       |
 
+### Base URL
+```
+http://localhost:8081/api
+```
+
+---
+
+### Terminal Endpoints
+
+These endpoints are called by the Raspberry Pi timeclock terminal.
+
+#### Get User Status
+```
+GET /terminal/user?rfid={rfidTag}
+```
+
+**Response 200:**
+```json
+{
+  "userId": 1,
+  "displayName": "Max Mustermann",
+  "role": "USER",
+  "clockedIn": false
+}
+```
+
+**Response 404:** Unknown RFID tag
+
+---
+
+#### Punch Clock (In/Out)
+```
+POST /terminal/punch
+Content-Type: application/json
+```
+
+**Request:**
+```json
+{
+  "rfid": "ABC123",
+  "breakMinutes": 30
+}
+```
+`breakMinutes` is optional, used for clock-out.
+
+**Response 200:**
+```json
+{
+  "displayName": "Max Mustermann",
+  "action": "CLOCK_IN",
+  "timestamp": "2026-01-31T08:00:00",
+  "breakMinutes": null,
+  "message": "Willkommen, Max Mustermann!"
+}
+```
+
+---
+
+### Admin Endpoints
+
+User management endpoints for the admin interface.
+
+#### List Users
+```
+GET /admin/users
+GET /admin/users?includeInactive=true
+```
+
+**Response 200:**
+```json
+[
+  {
+    "id": 1,
+    "rfidTag": "ABC123",
+    "displayName": "Max Mustermann",
+    "role": "USER",
+    "clockedIn": false,
+    "active": true,
+    "createdAt": "2026-01-31T06:00:00",
+    "updatedAt": null
+  }
+]
+```
+
+---
+
+#### Get User
+```
+GET /admin/users/{id}
+```
+
+**Response 200:** Single user object  
+**Response 404:** User not found
+
+---
+
+#### Create User
+```
+POST /admin/users
+Content-Type: application/json
+```
+
+**Request:**
+```json
+{
+  "rfidTag": "XYZ789",
+  "displayName": "Erika Musterfrau",
+  "role": "ADMIN"
+}
+```
+`role` is optional, defaults to `USER`.
+
+**Response 201:** Created user object  
+**Response 400:** RFID tag already exists
+
+---
+
+#### Update User
+```
+PUT /admin/users/{id}
+Content-Type: application/json
+```
+
+**Request (all fields optional):**
+```json
+{
+  "displayName": "New Name",
+  "rfidTag": "NEWRFID",
+  "role": "ADMIN",
+  "active": true
+}
+```
+
+**Response 200:** Updated user object  
+**Response 404:** User not found
+
+---
+
+#### Delete User (Soft Delete)
+```
+DELETE /admin/users/{id}
+```
+
+**Response 204:** Success (no content)  
+**Response 404:** User not found
+
+---
+
+### Health Check
+```
+GET /health
+```
+
+**Response 200:**
+```json
+{
+  "status": "UP",
+  "service": "rasptime-backend",
+  "timestamp": "2026-01-31T08:00:00"
+}
+```
+
 ## Development
 
 Access H2 Console at: http://localhost:8080/h2-console
