@@ -6,5 +6,5 @@ public enum AuditAction {
     USER_CREATED,
     USER_DELETED,
     LOGIN_FAILED,
-    UNKNOWN_RFID
+    USER_UPDATED, UNKNOWN_RFID
 }
