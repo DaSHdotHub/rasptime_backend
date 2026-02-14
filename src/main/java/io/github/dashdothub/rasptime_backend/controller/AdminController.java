@@ -67,4 +67,16 @@ public class AdminController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @GetMapping("/time-entries")
+    public ResponseEntity<TimeReportResponse> getTimeEntries(
+        @RequestParam Long userId,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+        @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+    try {
+        return ResponseEntity.ok(adminService.getTimeReport(userId, from, to));
+    } catch (IllegalArgumentException e) {
+        return ResponseEntity.notFound().build();
+        }
+    }
 }
