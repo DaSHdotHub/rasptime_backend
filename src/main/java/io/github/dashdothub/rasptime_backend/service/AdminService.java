@@ -99,4 +99,35 @@ public class AdminService {
         auditService.log(AuditAction.USER_DELETED, user.getId(), user.getRfidTag(),
                 "Soft deleted user: " + user.getDisplayName());
     }
+
+    public TimeReportResponse getTimeReport(Long userId, LocalDate from, LocalDate to) {
+    User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+    List<TimeEntry> entries = timeEntryRepository.findByUserAndWorkDateBetween(user, from, to);
+
+    List<TimeEntryResponse> entryResponses = entries.stream()
+            .map(TimeEntryResponse::from)
+            .toList();
+
+    long totalNet = entryResponses.stream()
+            .filter(e -> e.getNetMinutes() != null)
+            .mapToLong(TimeEntryResponse::getNetMinutes)
+            .sum();
+
+    int totalDays = (int) entries.stream()
+            .map(TimeEntry::getWorkDate)
+            .distinct()
+            .count();
+
+    return TimeReportResponse.builder()
+            .userId(user.getId())
+            .displayName(user.getDisplayName())
+            .from(from)
+            .to(to)
+            .entries(entryResponses)
+            .totalNetMinutes(totalNet)
+            .totalDays(totalDays)
+            .build();
+    }
 }
