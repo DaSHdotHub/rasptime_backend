@@ -21,6 +21,7 @@ import java.util.List;
 public class AdminService {
 
     private final UserRepository userRepository;
+    private final TimeEntryRepository timeEntryRepository;
     private final AuditService auditService;
 
     public List<UserResponse> getAllUsers() {
