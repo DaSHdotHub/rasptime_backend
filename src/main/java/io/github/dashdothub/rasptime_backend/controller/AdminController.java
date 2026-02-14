@@ -4,6 +4,8 @@ import io.github.dashdothub.rasptime_backend.dto.CreateUserRequest;
 import io.github.dashdothub.rasptime_backend.dto.UpdateUserRequest;
 import io.github.dashdothub.rasptime_backend.dto.UserResponse;
 import io.github.dashdothub.rasptime_backend.service.AdminService;
+import io.github.dashdothub.rasptime_backend.dto.TimeReportResponse;
+import java.time.LocalDate;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -74,10 +76,10 @@ public class AdminController {
         @RequestParam Long userId,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-    try {
-        return ResponseEntity.ok(adminService.getTimeReport(userId, from, to));
-    } catch (IllegalArgumentException e) {
-        return ResponseEntity.notFound().build();
+        try {
+            return ResponseEntity.ok(adminService.getTimeReport(userId, from, to));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 }
