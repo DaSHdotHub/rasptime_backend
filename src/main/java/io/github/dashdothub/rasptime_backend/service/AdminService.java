@@ -3,6 +3,8 @@ package io.github.dashdothub.rasptime_backend.service;
 import io.github.dashdothub.rasptime_backend.dto.CreateUserRequest;
 import io.github.dashdothub.rasptime_backend.dto.UpdateUserRequest;
 import io.github.dashdothub.rasptime_backend.dto.UserResponse;
+import io.github.dashdothub.rasptime_backend.dto.TimeReportResponse;
+import io.github.dashdothub.rasptime_backend.dto.TimeEntryResponse;
 import io.github.dashdothub.rasptime_backend.entity.AuditAction;
 import io.github.dashdothub.rasptime_backend.entity.Role;
 import io.github.dashdothub.rasptime_backend.entity.User;
@@ -11,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
