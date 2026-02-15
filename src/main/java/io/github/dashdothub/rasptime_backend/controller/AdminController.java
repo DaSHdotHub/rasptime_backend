@@ -16,13 +16,13 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/admin/users")
+@RequestMapping("/api/admin")
 @RequiredArgsConstructor
 public class AdminController {
 
     private final AdminService adminService;
 
-    @GetMapping
+    @GetMapping("/users")
     public ResponseEntity<List<UserResponse>> getAllUsers(
             @RequestParam(defaultValue = "false") boolean includeInactive) {
         List<UserResponse> users = includeInactive
@@ -31,7 +31,7 @@ public class AdminController {
         return ResponseEntity.ok(users);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("users/{id}")
     public ResponseEntity<UserResponse> getUser(@PathVariable Long id) {
         try {
             return ResponseEntity.ok(adminService.getUserById(id));
@@ -40,7 +40,7 @@ public class AdminController {
         }
     }
 
-    @PostMapping
+    @PostMapping("/users")
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
         try {
             UserResponse user = adminService.createUser(request);
@@ -50,7 +50,7 @@ public class AdminController {
         }
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("users/{id}")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long id,
             @RequestBody UpdateUserRequest request) {
@@ -61,7 +61,7 @@ public class AdminController {
         }
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("users/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         try {
             adminService.deleteUser(id);
