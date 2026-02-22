@@ -1,10 +1,8 @@
 package io.github.dashdothub.rasptime_backend.controller;
 
-import io.github.dashdothub.rasptime_backend.dto.CreateUserRequest;
-import io.github.dashdothub.rasptime_backend.dto.UpdateUserRequest;
-import io.github.dashdothub.rasptime_backend.dto.UserResponse;
+import io.github.dashdothub.rasptime_backend.dto.*;
 import io.github.dashdothub.rasptime_backend.service.AdminService;
-import io.github.dashdothub.rasptime_backend.dto.TimeReportResponse;
+
 import java.time.LocalDate;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -81,5 +79,11 @@ public class AdminController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/weekly-overview")
+    public ResponseEntity<List<WeeklyUserSummary>> getWeeklyOverview(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart) {
+        return ResponseEntity.ok(adminService.getWeeklyOverview(weekStart));
     }
 }

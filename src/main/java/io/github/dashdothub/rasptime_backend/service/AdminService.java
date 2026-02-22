@@ -1,10 +1,6 @@
 package io.github.dashdothub.rasptime_backend.service;
 
-import io.github.dashdothub.rasptime_backend.dto.CreateUserRequest;
-import io.github.dashdothub.rasptime_backend.dto.UpdateUserRequest;
-import io.github.dashdothub.rasptime_backend.dto.UserResponse;
-import io.github.dashdothub.rasptime_backend.dto.TimeReportResponse;
-import io.github.dashdothub.rasptime_backend.dto.TimeEntryResponse;
+import io.github.dashdothub.rasptime_backend.dto.*;
 import io.github.dashdothub.rasptime_backend.entity.AuditAction;
 import io.github.dashdothub.rasptime_backend.entity.Role;
 import io.github.dashdothub.rasptime_backend.entity.User;
@@ -15,8 +11,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +41,41 @@ public class AdminService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         return UserResponse.from(user);
+    }
+
+    public List<WeeklyUserSummary> getWeeklyOverview(LocalDate weekStart) {
+        LocalDate weekEnd = weekStart.plusDays(4); // Mon-Fri
+
+        List<User> users = userRepository.findAllByActiveTrue();
+
+        return users.stream().map(user -> {
+            Map<LocalDate, Long> dailyMinutes = new HashMap<>();
+
+            List<TimeEntry> entries = timeEntryRepository.findByUserAndWorkDateBetween(user, weekStart, weekEnd);
+
+            for (LocalDate date = weekStart; !date.isAfter(weekEnd); date = date.plusDays(1)) {
+                final LocalDate currentDate = date;
+                long dayMinutes = entries.stream()
+                        .filter(e -> e.getWorkDate().equals(currentDate))
+                        .filter(e -> e.getPunchOut() != null)
+                        .mapToLong(e -> {
+                            long gross = Duration.between(e.getPunchIn(), e.getPunchOut()).toMinutes();
+                            return gross - (e.getBreakMinutes() != null ? e.getBreakMinutes() : 0);
+                        })
+                        .sum();
+                dailyMinutes.put(date, dayMinutes);
+            }
+
+            long totalMinutes = dailyMinutes.values().stream().mapToLong(Long::longValue).sum();
+
+            return WeeklyUserSummary.builder()
+                    .userId(user.getId())
+                    .displayName(user.getDisplayName())
+                    .clockedIn(user.isClockedIn())
+                    .dailyMinutes(dailyMinutes)
+                    .totalMinutes(totalMinutes)
+                    .build();
+        }).toList();
     }
 
     @Transactional
