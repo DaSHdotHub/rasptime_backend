@@ -14,4 +14,5 @@ public class WeeklyUserSummary {
     private boolean clockedIn;
     private Map<LocalDate, Long> dailyMinutes;
     private Long totalMinutes;
+    private Integer contractedMinutesPerWeek;
 }

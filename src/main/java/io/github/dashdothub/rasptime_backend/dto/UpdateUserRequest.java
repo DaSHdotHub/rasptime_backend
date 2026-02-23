@@ -9,4 +9,5 @@ public class UpdateUserRequest {
     private String rfidTag;
     private Role role;
     private Boolean active;
+    private Integer contractedMinutesPerWeek;
 }

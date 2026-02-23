@@ -14,4 +14,6 @@ public class CreateUserRequest {
     private String displayName;
 
     private Role role;
+
+    private Integer contractedMinutesPerWeek;
 }

@@ -16,6 +16,7 @@ public class UserResponse {
     private Role role;
     private boolean clockedIn;
     private boolean active;
+    private Integer contractedMinutesPerWeek;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -27,6 +28,7 @@ public class UserResponse {
                 .role(user.getRole())
                 .clockedIn(user.isClockedIn())
                 .active(user.isActive())
+                .contractedMinutesPerWeek(user.getContractedMinutesPerWeek())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

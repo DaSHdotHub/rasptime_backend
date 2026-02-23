@@ -74,6 +74,7 @@ public class AdminService {
                     .clockedIn(user.isClockedIn())
                     .dailyMinutes(dailyMinutes)
                     .totalMinutes(totalMinutes)
+                    .contractedMinutesPerWeek(user.getContractedMinutesPerWeek())
                     .build();
         }).toList();
     }
@@ -88,6 +89,7 @@ public class AdminService {
                 .rfidTag(request.getRfidTag())
                 .displayName(request.getDisplayName())
                 .role(request.getRole() != null ? request.getRole() : Role.USER)
+                .contractedMinutesPerWeek(request.getContractedMinutesPerWeek() != null ? request.getContractedMinutesPerWeek() : 2400)
                 .build();
 
         user = userRepository.save(user);
@@ -112,6 +114,9 @@ public class AdminService {
                 throw new IllegalArgumentException("RFID tag already exists");
             }
             user.setRfidTag(request.getRfidTag());
+        }
+        if (request.getContractedMinutesPerWeek() != null) {
+            user.setContractedMinutesPerWeek(request.getContractedMinutesPerWeek());
         }
         if (request.getRole() != null) {
             user.setRole(request.getRole());

@@ -26,6 +26,9 @@ public class User {
     @Column(nullable = false)
     private String displayName;
 
+    @Column
+    private Integer contractedMinutesPerWeek;
+
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private Role role = Role.USER;
