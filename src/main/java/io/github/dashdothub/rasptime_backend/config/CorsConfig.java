@@ -15,9 +15,14 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
-                "http://localhost:5173",      // Vite dev
-                "http://localhost:3000",      // Production frontend
-                "http://192.168.178.157:3000" // Production frontend via IP
+                // Vite dev
+                "http://localhost:5173",
+                // Production frontend
+                "http://localhost:3000",
+                // Production frontend via IP
+                "http://192.168.178.157:3000",
+                // webservice
+                "https://zeiterfassung.idilia.dscloud.me/"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
