@@ -4,6 +4,8 @@ import io.github.dashdothub.rasptime_backend.dto.*;
 import io.github.dashdothub.rasptime_backend.service.AdminService;
 
 import java.time.LocalDate;
+
+import io.github.dashdothub.rasptime_backend.service.RegistrationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -19,6 +22,7 @@ import java.util.List;
 public class AdminController {
 
     private final AdminService adminService;
+    private final RegistrationService registrationService;
 
     @GetMapping("/users")
     public ResponseEntity<List<UserResponse>> getAllUsers(
@@ -85,5 +89,24 @@ public class AdminController {
     public ResponseEntity<List<WeeklyUserSummary>> getWeeklyOverview(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart) {
         return ResponseEntity.ok(adminService.getWeeklyOverview(weekStart));
+    }
+
+    @PostMapping("/registration/start")
+    public ResponseEntity<Map<String, String>> startRegistration() {
+        String sessionId = registrationService.startSession();
+        return ResponseEntity.ok(Map.of("sessionId", sessionId));
+    }
+
+    @GetMapping("/registration/status/{sessionId}")
+    public ResponseEntity<Map<String, Object>> getRegistrationStatus(@PathVariable String sessionId) {
+        return ResponseEntity.ok(registrationService.getStatus(sessionId));
+    }
+
+    @PostMapping("/registration/submit")
+    public ResponseEntity<Void> submitRfid(@RequestBody Map<String, String> body) {
+        String sessionId = body.get("sessionId");
+        String rfidTag = body.get("rfidTag");
+        registrationService.submitRfid(sessionId, rfidTag);
+        return ResponseEntity.ok().build();
     }
 }

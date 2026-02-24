@@ -6,9 +6,12 @@ import io.github.dashdothub.rasptime_backend.dto.UserStatusResponse;
 import io.github.dashdothub.rasptime_backend.entity.AuditAction;
 import io.github.dashdothub.rasptime_backend.service.AuditService;
 import io.github.dashdothub.rasptime_backend.service.TerminalService;
+import io.github.dashdothub.rasptime_backend.service.RegistrationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/terminal")
@@ -17,6 +20,7 @@ public class TerminalController {
 
     private final TerminalService terminalService;
     private final AuditService auditService;
+    private final RegistrationService registrationService;
 
     @GetMapping("/user")
     public ResponseEntity<UserStatusResponse> getUser(@RequestParam String rfid) {
@@ -26,6 +30,17 @@ public class TerminalController {
                     auditService.log(AuditAction.UNKNOWN_RFID, null, rfid, "Unknown RFID attempt");
                     return ResponseEntity.notFound().build();
                 });
+    }
+
+    @GetMapping("/registration/active")
+    public ResponseEntity<Map<String, Object>> checkRegistrationMode() {
+        if (registrationService.hasActiveSession()) {
+            return ResponseEntity.ok(Map.of(
+                    "active", true,
+                    "sessionId", registrationService.getActiveSessionId()
+            ));
+        }
+        return ResponseEntity.ok(Map.of("active", false));
     }
 
     @PostMapping("/punch")
