@@ -7,13 +7,15 @@ import io.github.dashdothub.rasptime_backend.repository.TimeEntryRepository;
 import io.github.dashdothub.rasptime_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -24,32 +26,50 @@ public class ClockOutScheduler {
     private final UserRepository userRepository;
     private final TimeEntryRepository timeEntryRepository;
     private final AuditService auditService;
+    private final TransactionTemplate transactionTemplate;
 
-    @Scheduled(cron = "0 59 23 * * *")  // 23:59 every day
-    @Transactional
+    @Value("${app.scheduler.clockout.zone:UTC}")
+    private String clockOutZone;
+
+    @Scheduled(
+            cron = "${app.scheduler.clockout.cron:0 59 23 * * *}",
+            zone = "${app.scheduler.clockout.zone:UTC}"
+    )
     public void autoClockOutAll() {
-        log.info("Running auto clock-out job...");
+        runClockOutJob("scheduled");
+    }
+
+    public ClockOutRunResult runNow() {
+        return runClockOutJob("manual");
+    }
+
+    private ClockOutRunResult runClockOutJob(String trigger) {
+        ZoneId zoneId = ZoneId.of(clockOutZone);
+        log.info("Running auto clock-out job (trigger: {}, zone: {}, now: {})", trigger, clockOutZone, LocalDateTime.now(zoneId));
 
         List<User> clockedInUsers = userRepository.findAllByClockedInTrue();
 
         if (clockedInUsers.isEmpty()) {
             log.info("No users to clock out");
-            return;
+            return new ClockOutRunResult(trigger, 0, 0, 0);
         }
 
-        LocalDateTime endOfDay = LocalDateTime.of(LocalDate.now(), LocalTime.of(23, 59, 59));
-        int count = 0;
+        LocalDateTime endOfDay = LocalDateTime.of(LocalDate.now(zoneId), LocalTime.of(23, 59, 59));
+        int successCount = 0;
+        int failureCount = 0;
 
         for (User user : clockedInUsers) {
             try {
-                autoClockOutUser(user, endOfDay);
-                count++;
+                transactionTemplate.executeWithoutResult(status -> autoClockOutUser(user, endOfDay));
+                successCount++;
             } catch (Exception e) {
-                log.error("Failed to auto clock-out user {}: {}", user.getId(), e.getMessage());
+                failureCount++;
+                log.error("Failed to auto clock-out user {}", user.getId(), e);
             }
         }
 
-        log.info("Auto clock-out completed: {} users processed", count);
+        log.info("Auto clock-out completed: total={}, success={}, failed={}", clockedInUsers.size(), successCount, failureCount);
+        return new ClockOutRunResult(trigger, clockedInUsers.size(), successCount, failureCount);
     }
 
     private void autoClockOutUser(User user, LocalDateTime clockOutTime) {
@@ -90,4 +110,6 @@ public class ClockOutScheduler {
         if (grossMinutes > 360) return 30;  // >6h
         return 0;
     }
+
+    public record ClockOutRunResult(String trigger, int totalUsers, int successfulUsers, int failedUsers) {}
 }
