@@ -95,12 +95,17 @@ public class ClockOutScheduler {
         user.setClockedIn(false);
         userRepository.save(user);
 
-        auditService.log(
-                AuditAction.CLOCK_OUT_AUTO,
-                user.getId(),
-                user.getRfidTag(),
-                String.format("Auto clock-out at 23:59. Gross: %d min, Break: %d min", grossMinutes, requiredBreak)
-        );
+        try {
+            auditService.log(
+                    AuditAction.CLOCK_OUT_AUTO,
+                    user.getId(),
+                    user.getRfidTag(),
+                    String.format("Auto clock-out at 23:59. Gross: %d min, Break: %d min", grossMinutes, requiredBreak)
+            );
+        } catch (Exception e) {
+            // Clock-out is business-critical; do not roll it back because audit logging failed.
+            log.error("Clock-out succeeded but audit logging failed for user {}", user.getId(), e);
+        }
 
         log.info("Auto clocked out user: {} ({})", user.getDisplayName(), user.getRfidTag());
     }
