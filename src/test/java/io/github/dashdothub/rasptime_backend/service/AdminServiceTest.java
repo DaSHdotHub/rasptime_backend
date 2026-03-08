@@ -102,7 +102,7 @@ class AdminServiceTest {
                     () -> adminService.createUser(request)
             );
 
-            assertEquals("RFID tag already exists", exception.getMessage());
+            assertEquals("RFID tag is already assigned to an active user", exception.getMessage());
             verify(userRepository).existsByRfidTagAndActiveTrue("EXISTING123");
             verify(userRepository, never()).save(any(User.class));
         }
@@ -156,7 +156,7 @@ class AdminServiceTest {
             // Then
             assertNotNull(response);
             // Should NOT check for duplicate since it's the same tag
-            verify(userRepository, never()).existsByRfidTag(anyString());
+            verify(userRepository, never()).existsByRfidTagAndActiveTrue(anyString());
             verify(userRepository).save(any(User.class));
         }
 
@@ -199,7 +199,7 @@ class AdminServiceTest {
                     () -> adminService.updateUser(1L, request)
             );
 
-            assertEquals("RFID tag already exists", exception.getMessage());
+            assertEquals("RFID tag is already assigned to an active user", exception.getMessage());
             verify(userRepository).existsByRfidTagAndActiveTrue("ANOTHER456");
             verify(userRepository, never()).save(any(User.class));
         }
@@ -244,7 +244,7 @@ class AdminServiceTest {
             assertEquals(Role.ADMIN, response.getRole());
             assertEquals(1200, response.getContractedMinutesPerWeek());
             // Should NOT check for duplicate since RFID wasn't changed
-            verify(userRepository, never()).existsByRfidTag(anyString());
+            verify(userRepository, never()).existsByRfidTagAndActiveTrue(anyString());
         }
     }
 
