@@ -110,10 +110,32 @@ public class ClockOutScheduler {
         log.info("Auto clocked out user: {} ({})", user.getDisplayName(), user.getRfidTag());
     }
 
+    /**
+     * Calculate required break based on German labor law (Arbeitszeitgesetz)
+     * Graduated break calculation:
+     * - 0-6h: no break
+     * - 6h01m-6h30m: graduated (1-30 min)
+     * - 6h31m-9h: 30 min
+     * - 9h01m-9h15m: graduated (31-45 min)
+     * - 9h15m+: 45 min
+     */
     private int calculateRequiredBreak(long grossMinutes) {
-        if (grossMinutes > 540) return 45;  // >9h
-        if (grossMinutes > 360) return 30;  // >6h
-        return 0;
+        if (grossMinutes <= 360) {
+            // 6h or less: no break required
+            return 0;
+        } else if (grossMinutes <= 390) {
+            // 6h01m to 6h30m: graduated break (1-30 min)
+            return (int) (grossMinutes - 360);
+        } else if (grossMinutes <= 540) {
+            // 6h31m to 9h: 30 min break required
+            return 30;
+        } else if (grossMinutes <= 555) {
+            // 9h01m to 9h15m: graduated break (31-45 min)
+            return (int) (30 + (grossMinutes - 540));
+        } else {
+            // Over 9h15m: 45 min break required
+            return 45;
+        }
     }
 
     public record ClockOutRunResult(String trigger, int totalUsers, int successfulUsers, int failedUsers) {}
