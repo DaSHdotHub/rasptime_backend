@@ -222,9 +222,9 @@ GRANT ALL ON SCHEMA public TO rasptime;
 
 ## Production build
 
-### Create systemd-Service (Linux/Ubuntu)
+### Create systemd service (Linux/Ubuntu)
 ```bash
-sudo nano /etc/systemd/system/rasptime_backend.service
+sudo nano /etc/systemd/system/rasptime.service
 ```
 
 Edit paths as needed
@@ -236,7 +236,8 @@ After=network.target docker.service
 [Service]
 User=admshaulov
 WorkingDirectory=/home/admshaulov/projects/rasptime_backend
-ExecStart=/usr/bin/java -jar /home/admshaulov/projects/rasptime_backend/target/rasptime_backend-0.0.1-SNAPSHOT.jar --server.port=8081
+Environment=APP_SCHEDULER_CLOCKOUT_ZONE=Europe/Berlin
+ExecStart=/usr/bin/java -jar /home/admshaulov/projects/rasptime_backend/target/rasptime_backend-0.0.1-SNAPSHOT.jar --server.port=8081 --spring.profiles.active=prod
 SuccessExitStatus=143
 Restart=on-failure
 RestartSec=10

@@ -2,6 +2,7 @@ package io.github.dashdothub.rasptime_backend.controller;
 
 import io.github.dashdothub.rasptime_backend.dto.*;
 import io.github.dashdothub.rasptime_backend.service.AdminService;
+import io.github.dashdothub.rasptime_backend.service.ClockOutScheduler;
 
 import java.time.LocalDate;
 
@@ -23,6 +24,7 @@ public class AdminController {
 
     private final AdminService adminService;
     private final RegistrationService registrationService;
+    private final ClockOutScheduler clockOutScheduler;
 
     @GetMapping("/users")
     public ResponseEntity<List<UserResponse>> getAllUsers(
@@ -108,5 +110,10 @@ public class AdminController {
         String rfidTag = body.get("rfidTag");
         registrationService.submitRfid(sessionId, rfidTag);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/clock-out/run")
+    public ResponseEntity<ClockOutScheduler.ClockOutRunResult> runClockOutNow() {
+        return ResponseEntity.ok(clockOutScheduler.runNow());
     }
 }
