@@ -259,3 +259,35 @@ sudo systemctl enable rasptime
 # Service starten
 sudo systemctl start rasptime
 ```
+
+### Environmental settings
+
+Store passwords outside the git repository
+
+```bash
+# Create environment on local machine, e.g.
+sudo mkdir -p /etc/rasptime
+sudo nano /etc/rasptime/rasptime.env
+
+# Store values
+DB_HOST=localhost
+DB_PORT=5433
+DB_NAME=''
+DB_USERNAME=''
+DB_PASSWORD=''
+APP_SCHEDULER_CLOCKOUT_ZONE=Europe/Berlin
+
+# Add enviroment settings to systemd
+sudo nano /etc/systemd/system/rasptime.service
+
+# Under serivce add line for environment
+[Service]
+EnvironmentFile=/etc/rasptime/rasptime.env
+
+# Secure + apply
+sudo chmod 600 /etc/rasptime/rasptime.env
+sudo chown root:root /etc/rasptime/rasptime.env
+sudo systemctl daemon-reload
+sudo systemctl restart rasptime
+sudo systemctl show rasptime -p EnvironmentFiles -p Environment
+```
