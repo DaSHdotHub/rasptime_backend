@@ -37,7 +37,6 @@ class AdminServiceTest {
     private AdminService adminService;
 
     private User existingUser;
-    private User anotherUser;
 
     @BeforeEach
     void setUp() {
@@ -45,17 +44,6 @@ class AdminServiceTest {
                 .id(1L)
                 .rfidTag("EXISTING123")
                 .displayName("Existing User")
-                .role(Role.USER)
-                .clockedIn(false)
-                .active(true)
-                .contractedMinutesPerWeek(2400)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        anotherUser = User.builder()
-                .id(2L)
-                .rfidTag("ANOTHER456")
-                .displayName("Another User")
                 .role(Role.USER)
                 .clockedIn(false)
                 .active(true)
@@ -78,7 +66,7 @@ class AdminServiceTest {
             request.setRole(Role.USER);
             request.setContractedMinutesPerWeek(2400);
 
-            when(userRepository.existsByRfidTag("NEW_RFID_123")).thenReturn(false);
+            when(userRepository.existsByRfidTagAndActiveTrue("NEW_RFID_123")).thenReturn(false);
             when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
                 User user = invocation.getArgument(0);
                 user.setId(3L);
@@ -93,7 +81,7 @@ class AdminServiceTest {
             assertNotNull(response);
             assertEquals("New User", response.getDisplayName());
             assertEquals("NEW_RFID_123", response.getRfidTag());
-            verify(userRepository).existsByRfidTag("NEW_RFID_123");
+            verify(userRepository).existsByRfidTagAndActiveTrue("NEW_RFID_123");
             verify(userRepository).save(any(User.class));
         }
 
@@ -106,7 +94,7 @@ class AdminServiceTest {
             request.setDisplayName("New User");
             request.setRole(Role.USER);
 
-            when(userRepository.existsByRfidTag("EXISTING123")).thenReturn(true);
+            when(userRepository.existsByRfidTagAndActiveTrue("EXISTING123")).thenReturn(true);
 
             // When & Then
             IllegalArgumentException exception = assertThrows(
@@ -115,7 +103,7 @@ class AdminServiceTest {
             );
 
             assertEquals("RFID tag already exists", exception.getMessage());
-            verify(userRepository).existsByRfidTag("EXISTING123");
+            verify(userRepository).existsByRfidTagAndActiveTrue("EXISTING123");
             verify(userRepository, never()).save(any(User.class));
         }
 
@@ -129,7 +117,7 @@ class AdminServiceTest {
             request.setRole(Role.USER);
             request.setContractedMinutesPerWeek(2400);
 
-            when(userRepository.existsByRfidTag("DEACTIVATED_RFID")).thenReturn(false);
+            when(userRepository.existsByRfidTagAndActiveTrue("DEACTIVATED_RFID")).thenReturn(false);
             when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
                 User user = invocation.getArgument(0);
                 user.setId(4L);
@@ -181,7 +169,7 @@ class AdminServiceTest {
             request.setDisplayName("Updated Name");
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
-            when(userRepository.existsByRfidTag("BRAND_NEW_TAG")).thenReturn(false);
+            when(userRepository.existsByRfidTagAndActiveTrue("BRAND_NEW_TAG")).thenReturn(false);
             when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             // When
@@ -190,7 +178,7 @@ class AdminServiceTest {
             // Then
             assertNotNull(response);
             assertEquals("BRAND_NEW_TAG", response.getRfidTag());
-            verify(userRepository).existsByRfidTag("BRAND_NEW_TAG");
+            verify(userRepository).existsByRfidTagAndActiveTrue("BRAND_NEW_TAG");
             verify(userRepository).save(any(User.class));
         }
 
@@ -203,7 +191,7 @@ class AdminServiceTest {
             request.setDisplayName("Updated Name");
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
-            when(userRepository.existsByRfidTag("ANOTHER456")).thenReturn(true);
+            when(userRepository.existsByRfidTagAndActiveTrue("ANOTHER456")).thenReturn(true);
 
             // When & Then
             IllegalArgumentException exception = assertThrows(
@@ -212,7 +200,7 @@ class AdminServiceTest {
             );
 
             assertEquals("RFID tag already exists", exception.getMessage());
-            verify(userRepository).existsByRfidTag("ANOTHER456");
+            verify(userRepository).existsByRfidTagAndActiveTrue("ANOTHER456");
             verify(userRepository, never()).save(any(User.class));
         }
 
@@ -273,7 +261,7 @@ class AdminServiceTest {
             request.setDisplayName("Updated Name");
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(existingUser));
-            when(userRepository.existsByRfidTag("")).thenReturn(false);
+            when(userRepository.existsByRfidTagAndActiveTrue("")).thenReturn(false);
             when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
             // When
@@ -281,7 +269,7 @@ class AdminServiceTest {
 
             // Then
             assertNotNull(response);
-            verify(userRepository).existsByRfidTag("");
+            verify(userRepository).existsByRfidTagAndActiveTrue("");
         }
 
         @Test
@@ -295,7 +283,7 @@ class AdminServiceTest {
             request.setContractedMinutesPerWeek(2400);
 
             // Assuming case-sensitive - lowercase version is not in use
-            when(userRepository.existsByRfidTag("existing123")).thenReturn(false);
+            when(userRepository.existsByRfidTagAndActiveTrue("existing123")).thenReturn(false);
             when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
                 User user = invocation.getArgument(0);
                 user.setId(5L);

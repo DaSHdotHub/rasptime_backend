@@ -81,7 +81,7 @@ public class AdminService {
 
     @Transactional
     public UserResponse createUser(CreateUserRequest request) {
-        if (userRepository.existsByRfidTag(request.getRfidTag())) {
+        if (userRepository.existsByRfidTagAndActiveTrue(request.getRfidTag())) {
             throw new IllegalArgumentException("RFID tag already exists");
         }
 
@@ -109,7 +109,7 @@ public class AdminService {
 
         if (request.getRfidTag() != null) {
             if (!user.getRfidTag().equals(request.getRfidTag())
-                    && userRepository.existsByRfidTag(request.getRfidTag())) {
+                    && userRepository.existsByRfidTagAndActiveTrue(request.getRfidTag())) {
                 throw new IllegalArgumentException("RFID tag already exists");
             }
             user.setRfidTag(request.getRfidTag());
