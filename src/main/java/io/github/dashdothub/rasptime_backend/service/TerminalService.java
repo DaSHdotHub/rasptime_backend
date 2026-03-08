@@ -47,14 +47,19 @@ public class TerminalService {
         if (user.isClockedIn()) {
             // Clock OUT
             TimeEntry entry = timeEntryRepository
-                    .findFirstByUserAndPunchOutIsNullOrderByPunchInDesc(user)
+                    .findByUserAndPunchOutIsNull(user)
                     .orElse(null);
 
             if (entry == null) {
                 user.setClockedIn(false);
                 userRepository.save(user);
-                return new PunchResponse("CLOCK_OUT", "Ausgestempelt (kein offener Eintrag)",
-                        user.getDisplayName(), LocalDateTime.now());
+                return PunchResponse.builder()
+                        .action("CLOCK_OUT")
+                        .message("Ausgestempelt (kein offener Eintrag)")
+                        .displayName(user.getDisplayName())
+                        .timestamp(LocalDateTime.now())
+                        .breakMinutes(0)
+                        .build();
             }
 
             entry.setPunchOut(LocalDateTime.now());
@@ -82,11 +87,15 @@ public class TerminalService {
             String message = String.format("Ausgestempelt - %d:%02d Netto (%d min Pause)",
                     netMinutes / 60, netMinutes % 60, actualBreak);
 
-            auditService.log(AuditAction.CLOCK_OUT, user.getId(), request.getRfid(),
-                    message);
+            auditService.log(AuditAction.CLOCK_OUT, user.getId(), request.getRfid(), message);
 
-            return new PunchResponse("CLOCK_OUT", message, user.getDisplayName(),
-                    entry.getPunchOut());
+            return PunchResponse.builder()
+                    .action("CLOCK_OUT")
+                    .message(message)
+                    .displayName(user.getDisplayName())
+                    .timestamp(entry.getPunchOut())
+                    .breakMinutes(actualBreak)
+                    .build();
         } else {
             // Clock IN
             TimeEntry entry = TimeEntry.builder()
@@ -104,8 +113,13 @@ public class TerminalService {
             auditService.log(AuditAction.CLOCK_IN, user.getId(), request.getRfid(),
                     "Eingestempelt");
 
-            return new PunchResponse("CLOCK_IN", "Eingestempelt", user.getDisplayName(),
-                    entry.getPunchIn());
+            return PunchResponse.builder()
+                    .action("CLOCK_IN")
+                    .message("Eingestempelt")
+                    .displayName(user.getDisplayName())
+                    .timestamp(entry.getPunchIn())
+                    .breakMinutes(0)
+                    .build();
         }
     }
 
@@ -152,7 +166,6 @@ public class TerminalService {
                 .displayName(user.getDisplayName())
                 .action("CLOCK_OUT")
                 .timestamp(now)
-                .breakMinutes(entry.getBreakMinutes())
                 .message("Auf Wiedersehen, " + user.getDisplayName() + "!")
                 .build();
     }
