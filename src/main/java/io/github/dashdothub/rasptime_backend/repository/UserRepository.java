@@ -19,4 +19,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllByClockedInTrue();
 
     boolean existsByRfidTag(String rfidTag);
+
+    boolean existsByRfidTagAndActiveTrue(String rfidTag);
+
 }

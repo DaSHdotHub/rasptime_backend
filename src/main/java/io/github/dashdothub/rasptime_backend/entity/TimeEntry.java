@@ -68,12 +68,35 @@ public class TimeEntry {
     /**
      * Minimum required break per German Arbeitszeitgesetz
      */
+    /**
+     * Calculate required break based on German labor law (Arbeitszeitgesetz)
+     * - Over 6h: graduated break up to 30min
+     * - Over 9h: graduated break up to 45min
+     *
+     * The break is graduated so:
+     * - 6:00 = 0 min, 6:15 = 15 min, 6:30+ = 30 min
+     * - 9:00 = 30 min, 9:15 = 45 min, 9:15+ = 45 min
+     */
     @Transient
     public int getRequiredBreakMinutes() {
         long grossMinutes = getGrossDuration().toMinutes();
-        if (grossMinutes > 540) return 45;  // >9h
-        if (grossMinutes > 360) return 30;  // >6h
-        return 0;
+
+        if (grossMinutes <= 360) {
+            // 6h or less: no break required
+            return 0;
+        } else if (grossMinutes <= 390) {
+            // 6h01m to 6h30m: graduated break (1-30 min)
+            return (int) (grossMinutes - 360);
+        } else if (grossMinutes <= 540) {
+            // 6h31m to 9h: 30min break required
+            return 30;
+        } else if (grossMinutes <= 555) {
+            // 9h01m to 9h15m: graduated break (31-45 min)
+            return (int) (30 + (grossMinutes - 540));
+        } else {
+            // Over 9h15m: 45min break required
+            return 45;
+        }
     }
 
     /**

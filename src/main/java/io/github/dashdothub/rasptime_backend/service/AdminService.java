@@ -90,6 +90,8 @@ public class AdminService {
                 .displayName(request.getDisplayName())
                 .role(request.getRole() != null ? request.getRole() : Role.USER)
                 .contractedMinutesPerWeek(request.getContractedMinutesPerWeek() != null ? request.getContractedMinutesPerWeek() : 2400)
+                .clockedIn(false)
+                .active(true)
                 .build();
 
         user = userRepository.save(user);
@@ -105,9 +107,6 @@ public class AdminService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        if (request.getDisplayName() != null) {
-            user.setDisplayName(request.getDisplayName());
-        }
         if (request.getRfidTag() != null) {
             if (!user.getRfidTag().equals(request.getRfidTag())
                     && userRepository.existsByRfidTag(request.getRfidTag())) {
@@ -115,6 +114,11 @@ public class AdminService {
             }
             user.setRfidTag(request.getRfidTag());
         }
+
+        if (request.getDisplayName() != null) {
+            user.setDisplayName(request.getDisplayName());
+        }
+
         if (request.getContractedMinutesPerWeek() != null) {
             user.setContractedMinutesPerWeek(request.getContractedMinutesPerWeek());
         }

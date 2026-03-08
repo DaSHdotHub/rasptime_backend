@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -33,15 +34,78 @@ public class TerminalService {
                         .build());
     }
 
-    @Transactional
     public PunchResponse punch(PunchRequest request) {
         User user = userRepository.findByRfidTagAndActiveTrue(request.getRfid())
-                .orElseThrow(() -> new IllegalArgumentException("Unknown RFID"));
+                .orElse(null);
+
+        if (user == null) {
+            auditService.log(AuditAction.UNKNOWN_RFID, null, request.getRfid(),
+                    "Unknown RFID tag attempted");
+            return null;
+        }
 
         if (user.isClockedIn()) {
-            return clockOut(user, request.getBreakMinutes());
+            // Clock OUT
+            TimeEntry entry = timeEntryRepository
+                    .findFirstByUserAndPunchOutIsNullOrderByPunchInDesc(user)
+                    .orElse(null);
+
+            if (entry == null) {
+                user.setClockedIn(false);
+                userRepository.save(user);
+                return new PunchResponse("CLOCK_OUT", "Ausgestempelt (kein offener Eintrag)",
+                        user.getDisplayName(), LocalDateTime.now());
+            }
+
+            entry.setPunchOut(LocalDateTime.now());
+
+            // Calculate required break based on gross duration
+            int requiredBreak = entry.getRequiredBreakMinutes();
+
+            // Use provided break minutes if given, otherwise use required minimum
+            int actualBreak = request.getBreakMinutes() != null
+                    ? request.getBreakMinutes()
+                    : requiredBreak;
+
+            // Ensure break is at least the required minimum
+            if (actualBreak < requiredBreak) {
+                actualBreak = requiredBreak;
+            }
+
+            entry.setBreakMinutes(actualBreak);
+            timeEntryRepository.save(entry);
+
+            user.setClockedIn(false);
+            userRepository.save(user);
+
+            long netMinutes = entry.getNetDuration().toMinutes();
+            String message = String.format("Ausgestempelt - %d:%02d Netto (%d min Pause)",
+                    netMinutes / 60, netMinutes % 60, actualBreak);
+
+            auditService.log(AuditAction.CLOCK_OUT, user.getId(), request.getRfid(),
+                    message);
+
+            return new PunchResponse("CLOCK_OUT", message, user.getDisplayName(),
+                    entry.getPunchOut());
         } else {
-            return clockIn(user);
+            // Clock IN
+            TimeEntry entry = TimeEntry.builder()
+                    .user(user)
+                    .punchIn(LocalDateTime.now())
+                    .workDate(LocalDate.now())
+                    .breakMinutes(0)
+                    .autoClosedOut(false)
+                    .build();
+            timeEntryRepository.save(entry);
+
+            user.setClockedIn(true);
+            userRepository.save(user);
+
+            auditService.log(AuditAction.CLOCK_IN, user.getId(), request.getRfid(),
+                    "Eingestempelt");
+
+            return new PunchResponse("CLOCK_IN", "Eingestempelt", user.getDisplayName(),
+                    entry.getPunchIn());
         }
     }
 

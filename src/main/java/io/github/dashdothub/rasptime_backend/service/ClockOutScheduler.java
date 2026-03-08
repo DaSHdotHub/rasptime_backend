@@ -27,29 +27,43 @@ public class ClockOutScheduler {
 
     @Scheduled(cron = "0 59 23 * * *")  // 23:59 every day
     @Transactional
-    public void autoClockOutAll() {
-        log.info("Running auto clock-out job...");
+    public void autoClockOut() {
+        log.info("Running auto clock-out job");
 
         List<User> clockedInUsers = userRepository.findAllByClockedInTrue();
 
-        if (clockedInUsers.isEmpty()) {
-            log.info("No users to clock out");
-            return;
-        }
-
-        LocalDateTime endOfDay = LocalDateTime.of(LocalDate.now(), LocalTime.of(23, 59, 59));
-        int count = 0;
-
         for (User user : clockedInUsers) {
             try {
-                autoClockOutUser(user, endOfDay);
-                count++;
+                TimeEntry entry = timeEntryRepository
+                        .findByUserAndPunchOutIsNull(user)
+                        .orElse(null);
+
+                if (entry != null) {
+                    LocalDateTime closeTime = LocalDateTime.now()
+                            .withHour(23).withMinute(59).withSecond(59);
+                    entry.setPunchOut(closeTime);
+                    entry.setAutoClosedOut(true);
+
+                    // Calculate required break based on gross duration
+                    int requiredBreak = entry.getRequiredBreakMinutes();
+                    entry.setBreakMinutes(requiredBreak);
+
+                    timeEntryRepository.save(entry);
+
+                    auditService.log(AuditAction.CLOCK_OUT_AUTO, user.getId(), null,
+                            String.format("Auto clock-out at 23:59 - %d min break applied",
+                                    requiredBreak));
+                }
+
+                user.setClockedIn(false);
+                userRepository.save(user);
+
             } catch (Exception e) {
-                log.error("Failed to auto clock-out user {}: {}", user.getId(), e.getMessage());
+                log.error("Error auto-clocking out user " + user.getId() + ": " + e.getMessage());
             }
         }
 
-        log.info("Auto clock-out completed: {} users processed", count);
+        log.info("Auto clock-out completed for " + clockedInUsers.size() + " users");
     }
 
     private void autoClockOutUser(User user, LocalDateTime clockOutTime) {
